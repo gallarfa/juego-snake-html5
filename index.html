@@ -17,6 +17,10 @@
                     <span id="score" class="score-value">0</span>
                 </div>
                 <div class="score-box">
+                    <span class="score-label">Dificultad</span>
+                    <span id="difficulty-display" class="score-value" style="font-size: 0.9rem; line-height: 1.25rem;">Principiante</span>
+                </div>
+                <div class="score-box">
                     <span class="score-label">Récord</span>
                     <span id="high-score" class="score-value">0</span>
                 </div>
@@ -28,10 +32,26 @@
             
             <div id="overlay" class="overlay">
                 <h2 id="overlay-title">Listo para jugar</h2>
-                <p id="overlay-desc">Usa las flechas del teclado o WASD para moverte.</p>
+                <div class="difficulty-selection">
+                    <span class="difficulty-label">Seleccionar Dificultad:</span>
+                    <div class="difficulty-buttons">
+                        <button class="diff-btn active" data-level="easy">Principiante</button>
+                        <button class="diff-btn" data-level="medium">Intermedio</button>
+                        <button class="diff-btn" data-level="hard">Avanzado</button>
+                    </div>
+                </div>
+                <p id="overlay-desc">Usa las flechas del teclado, WASD o desliza el dedo en celulares.</p>
                 <button id="start-btn" class="primary-btn">Comenzar</button>
             </div>
         </main>
+
+        <!-- Controles móviles virtuales -->
+        <div class="mobile-controls">
+            <button class="ctrl-btn btn-up" id="ctrl-up">▲</button>
+            <button class="ctrl-btn btn-left" id="ctrl-left">◀</button>
+            <button class="ctrl-btn btn-right" id="ctrl-right">▶</button>
+            <button class="ctrl-btn btn-down" id="ctrl-down">▼</button>
+        </div>
 
         <footer class="game-footer">
             <p>Desarrollado con HTML, CSS y JavaScript</p>

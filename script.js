@@ -10,7 +10,16 @@ const startBtn = document.getElementById('start-btn');
 // Configuración del juego
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
-let gameSpeed = 120; // Milisegundos por frame (menor es más rápido)
+
+// Configuración de dificultades
+const difficulties = {
+    easy: { startSpeed: 160, minSpeed: 95, speedStep: 3, label: 'Principiante', color: '#34d399' },
+    medium: { startSpeed: 100, minSpeed: 60, speedStep: 2, label: 'Intermedio', color: '#fbbf24' },
+    hard: { startSpeed: 60, minSpeed: 40, speedStep: 1, label: 'Avanzado', color: '#ef4444' }
+};
+
+let currentDiffKey = localStorage.getItem('snakeDifficulty') || 'easy';
+let gameSpeed = difficulties[currentDiffKey].startSpeed;
 
 // Variables del juego
 let snake = [];
@@ -26,9 +35,40 @@ let gameActive = false;
 // Inicializar el High Score
 highScoreElement.textContent = highScore;
 
-// Event Listeners
-document.addEventListener('keydown', handleKeyPress);
-startBtn.addEventListener('click', startGame);
+// Cambiar Dificultad
+function setDifficulty(diffKey) {
+    if (gameActive) return; // No cambiar dificultad en medio de una partida
+    
+    currentDiffKey = diffKey;
+    localStorage.setItem('snakeDifficulty', diffKey);
+    
+    // Actualizar botones en el DOM
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+        if (btn.dataset.level === diffKey) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Actualizar indicador en el header
+    const diffDisplay = document.getElementById('difficulty-display');
+    if (diffDisplay) {
+        diffDisplay.textContent = difficulties[diffKey].label;
+        diffDisplay.style.color = difficulties[diffKey].color;
+    }
+}
+
+// Configurar los botones de dificultad en el overlay
+document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const selectedLevel = e.currentTarget.dataset.level;
+        setDifficulty(selectedLevel);
+    });
+});
+
+// Inicializar dificultad visual al cargar
+setDifficulty(currentDiffKey);
 
 function initGame() {
     // Posición inicial de la serpiente (en el centro)
@@ -42,7 +82,9 @@ function initGame() {
     
     score = 0;
     scoreElement.textContent = score;
-    gameSpeed = 120;
+    
+    // Establecer la velocidad inicial según dificultad
+    gameSpeed = difficulties[currentDiffKey].startSpeed;
     
     placeFood();
 }
@@ -115,9 +157,10 @@ function update() {
         score += 10;
         scoreElement.textContent = score;
         
-        // Aumentar velocidad ligeramente al comer
-        if (gameSpeed > 60) {
-            gameSpeed -= 2;
+        // Aumentar velocidad ligeramente al comer según la dificultad
+        const config = difficulties[currentDiffKey];
+        if (gameSpeed > config.minSpeed) {
+            gameSpeed -= config.speedStep;
         }
         
         placeFood();
@@ -187,6 +230,37 @@ function placeFood() {
     }
 }
 
+function changeDirection(dir) {
+    if (!gameActive) return;
+    
+    switch (dir) {
+        case 'up':
+            if (dy === 0) {
+                dx = 0;
+                dy = -1;
+            }
+            break;
+        case 'down':
+            if (dy === 0) {
+                dx = 0;
+                dy = 1;
+            }
+            break;
+        case 'left':
+            if (dx === 0) {
+                dx = -1;
+                dy = 0;
+            }
+            break;
+        case 'right':
+            if (dx === 0) {
+                dx = 1;
+                dy = 0;
+            }
+            break;
+    }
+}
+
 function handleKeyPress(e) {
     if (!gameActive) return;
     
@@ -197,27 +271,80 @@ function handleKeyPress(e) {
     
     const key = e.key;
     
-    // Arriba
-    if ((key === 'ArrowUp' || key === 'w' || key === 'W') && dy === 0) {
-        dx = 0;
-        dy = -1;
-    }
-    // Abajo
-    else if ((key === 'ArrowDown' || key === 's' || key === 'S') && dy === 0) {
-        dx = 0;
-        dy = 1;
-    }
-    // Izquierda
-    else if ((key === 'ArrowLeft' || key === 'a' || key === 'A') && dx === 0) {
-        dx = -1;
-        dy = 0;
-    }
-    // Derecha
-    else if ((key === 'ArrowRight' || key === 'd' || key === 'D') && dx === 0) {
-        dx = 1;
-        dy = 0;
+    if (key === 'ArrowUp' || key === 'w' || key === 'W') {
+        changeDirection('up');
+    } else if (key === 'ArrowDown' || key === 's' || key === 'S') {
+        changeDirection('down');
+    } else if (key === 'ArrowLeft' || key === 'a' || key === 'A') {
+        changeDirection('left');
+    } else if (key === 'ArrowRight' || key === 'd' || key === 'D') {
+        changeDirection('right');
     }
 }
+
+// Event Listeners principales
+document.addEventListener('keydown', handleKeyPress);
+startBtn.addEventListener('click', startGame);
+
+// Event Listeners para botones móviles virtuales
+const bindMobileBtn = (id, direction) => {
+    const el = document.getElementById(id);
+    if (el) {
+        // Usar touchstart para respuesta instantánea sin delay de click
+        el.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            changeDirection(direction);
+        }, { passive: false });
+        
+        // Mantener click para soporte/pruebas
+        el.addEventListener('click', (e) => {
+            changeDirection(direction);
+        });
+    }
+};
+
+bindMobileBtn('ctrl-up', 'up');
+bindMobileBtn('ctrl-down', 'down');
+bindMobileBtn('ctrl-left', 'left');
+bindMobileBtn('ctrl-right', 'right');
+
+// Soporte para gestos táctiles (Swipes) en el canvas
+let touchStartX = 0;
+let touchStartY = 0;
+
+canvas.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+canvas.addEventListener('touchend', (e) => {
+    if (!gameActive) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    const diffX = touchEndX - touchStartX;
+    const diffY = touchEndY - touchStartY;
+    
+    // Ignorar deslizamientos muy cortos (taps accidentales)
+    if (Math.abs(diffX) < 30 && Math.abs(diffY) < 30) return;
+    
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+        // Deslizamiento horizontal
+        if (diffX > 0) {
+            changeDirection('right');
+        } else {
+            changeDirection('left');
+        }
+    } else {
+        // Deslizamiento vertical
+        if (diffY > 0) {
+            changeDirection('down');
+        } else {
+            changeDirection('up');
+        }
+    }
+}, { passive: true });
 
 // Dibujar estado inicial
 draw();
