@@ -1,5 +1,7 @@
 # Snake Game Pro 🐍
 
+🎮 **[¡Hacé clic acá para jugar y probar el juego en vivo!](https://gallarfa.github.io/juego-snake-html5/)**
+
 Bienvenido a **Snake Game Pro**, una implementación moderna y profesional del clásico juego de la viborita (Snake). Este proyecto está diseñado con un enfoque académico, demostrando buenas prácticas en el desarrollo frontend utilizando tecnologías web estándar.
 
 ## 🚀 Características
