@@ -286,19 +286,34 @@ function handleKeyPress(e) {
 document.addEventListener('keydown', handleKeyPress);
 startBtn.addEventListener('click', startGame);
 
-// Event Listeners para botones móviles virtuales
+// Event Listeners para botones móviles virtuales con feedback táctil visual instantáneo
 const bindMobileBtn = (id, direction) => {
     const el = document.getElementById(id);
     if (el) {
-        // Usar touchstart para respuesta instantánea sin delay de click
+        // Eventos táctiles
         el.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            el.classList.add('pressed');
             changeDirection(direction);
         }, { passive: false });
         
-        // Mantener click para soporte/pruebas
-        el.addEventListener('click', (e) => {
+        el.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            el.classList.remove('pressed');
+        }, { passive: false });
+        
+        // Eventos de mouse (para pruebas en PC)
+        el.addEventListener('mousedown', (e) => {
+            el.classList.add('pressed');
             changeDirection(direction);
+        });
+        
+        el.addEventListener('mouseup', () => {
+            el.classList.remove('pressed');
+        });
+        
+        el.addEventListener('mouseleave', () => {
+            el.classList.remove('pressed');
         });
     }
 };
